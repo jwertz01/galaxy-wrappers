@@ -1,0 +1,70 @@
+<tool id="variant_effect_predictor" name="Variant Effect Predictor" version="2.6">
+  <description>Get consequences of variants</description>
+  <command interpreter="perl">
+    variant_effect_predictor.pl
+      -format vcf -quiet -force -fork 4
+      -cache -dir /mnt/galaxyIndices/vep/
+      -i $input -o $output $output_format
+      $check_existing $check_ref $regulatory
+      $hgnc
+      -terms $terms $sift $polyphen
+  </command>
+  <inputs>
+    <param format="vcf" name="input" type="data" label="Input file"/>
+    
+    <param name="output_format" type="select" label="Output format">
+      <option value="" selected="true">Default</option>
+      <option value="-vcf">VCF</option>
+      <option value="-gvf">GVF</option>
+    </param>
+    
+    <param name="terms" type="select" label="Consequence types">
+      <option value="so" selected="true">Sequence Ontology (SO)</option>
+      <option value="ensembl">Ensembl</option>
+    </param>
+    
+    <param name="sift" type="select" label="SIFT predictions">
+      <option value="">None</option>
+      <option value="-sift s">Score only</option>
+      <option value="-sift p">Prediction only</option>
+      <option value="-sift b" selected="true">Score and prediction</option>
+    </param>
+    
+    <param name="polyphen" type="select" label="PolyPhen predictions">
+      <option value="">None</option>
+      <option value="-polyphen s">Score only</option>
+      <option value="-polyphen p">Prediction only</option>
+      <option value="-polyphen b" selected="true">Score and prediction</option>
+    </param>
+    
+    
+    <param name="check_existing" type="select" label="Check for existing co-located variations">
+      <option value="">no</option>
+      <option value="-check_existing" selected="true">yes</option>
+    </param>
+    
+    <param name="check_ref" type="select" label="Sanity check supplied reference allele against Ensembl reference">
+      <option value="" selected="true">no</option>
+      <option value="-check_ref">yes</option>
+    </param>
+    
+    <param name="regulatory" type="select" label="Get regulatory consequences">
+      <option value="">no</option>
+      <option value="-regulatory" selected="true">yes</option>
+    </param>
+    
+    <param name="hgnc" type="select" label="Add HGNC identifiers for genes where available">
+      <option value="" selected="true">no</option>
+      <option value="-hgnc">yes</option>
+    </param>
+    
+  </inputs>
+  <outputs>
+    <data format="tabular" name="output" />
+  </outputs>
+
+  <help>
+This tool calculates consequences of variants using Ensembl annotations
+  </help>
+
+</tool>
