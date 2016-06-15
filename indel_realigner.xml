@@ -10,12 +10,12 @@
                 <param name="knownAllele" type="data" format="vcf" label="Variant file (VCF format)" />
             </repeat>
             
-            <param name="consensusDeterminationModel" type="select" label="minimum reads at a locus to enable using the entropy calculation" help="-model,&#8209;&#8209;consensusDeterminationModel &amp;lt;consensusDeterminationModel&amp;gt;">
+           <!-- <param name="consensusDeterminationModel" type="select" label="minimum reads at a locus to enable using the entropy calculation" help="-model,&#8209;&#8209;consensusDeterminationModel &amp;lt;consensusDeterminationModel&amp;gt;">
                 <option value="USE_READS">USE_READS - Additionally uses indels already present in the original alignments of the reads</option>
                 <option value="KNOWNS_ONLY">KNOWNS_ONLYS - Uses only indels from a provided ROD of known indels</option>
                 <option value="USE_SW">USE_SW - Additionally uses 'Smith-Waterman' to generate alternate consenses</option>
-            </param>
-            <param name="LODThresholdForCleaning" type="float" value="5.0" label="LOD threshold above which the cleaner will clean" help="-LOD,&#8209;&#8209;LODThresholdForCleaning &amp;lt;LODThresholdForCleaning&amp;gt;" />
+            </param> -->
+            <!--<param name="LODThresholdForCleaning" type="float" value="5.0" label="LOD threshold above which the cleaner will clean" help="-LOD,&#8209;&#8209;LODThresholdForCleaning &amp;lt;LODThresholdForCleaning&amp;gt;" />-->
             <!--param name="nWayOut" type="float" value="5.0" label="Generate one output file for each input (-I) bam file (not compatible with -output)" help="-nWayOut,&#45;&#45;nWayOut &amp;lt;nWayOut&amp;gt;" /-->
         </expand>
 
@@ -71,8 +71,6 @@
             #for $i, $knownAllele in enumerate($analysis_type.optional_parameters.knownAlleles):
                 --knownAlleles knownAllele_${i}.vcf
             #end for
-            --consensusDeterminationModel       ${analysis_type.consensusDeterminationModel}
-            --LODThresholdForCleaning           ${analysis_type.LODThresholdForCleaning}
         #end if
 
         #if $analysis_type.advanced_parameters.advanced_parameters_enabled
