@@ -1,36 +1,76 @@
-<tool id="variant_effect_predictor" name="Variant Effect Predictor" version="2.6">
+<tool id="variant_effect_predictor" name="Variant Effect Predictor (VEP)" version="84">
   <description>Get consequences of variants</description>
-  <command interpreter="perl">
-    variant_effect_predictor.pl
-      -format vcf -quiet -force -fork 4
-      -cache -dir /mnt/galaxyIndices/vep/
-      -i $input -o $output $output_format
+  <requirements>
+    <requirement type="package" version="84">vep</requirement>
+  </requirements>
+  <command>
+    ln -s -f $stats_output out_stats.html &amp;&amp; /usr/bin/perl /Shared/Clngx/clngx-2-dev/tools/shed_tools/testtoolshed.g2.bx.psu.edu/repos/willmclaren/ensembl_vep/d6778b5d8382/ensembl_vep/variant_effect_predictor/variant_effect_predictor.pl
+      -species $species -format vcf -quiet -force -fork 4 -port 3337
+      -cache -dir /Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches
+      -i $input -o $output -stats_file out_stats.html $output_format $everything
       $check_existing $check_ref $regulatory
-      $hgnc
-      -terms $terms $sift $polyphen
+      $symbol $hgvs -terms $terms $sift $polyphen $transcript_set
+      $plugin_lof $pick $flag_pick $flag_pick_allele
+      #if str( $cadd_cond.use_cadd ) == "True":
+          #if str ( $cadd_cond.plugin_type ) == "full_ref_files":
+            -plugin CADD,/Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/Plugins/CADD/CADD_v1.3/annotations/allSnpsAnd20Mindels/whole_genome_SNVs.tsv.gz,/Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/Plugins/CADD/CADD_v1.3/annotations/allSnpsAnd20Mindels/InDels.tsv.gz
+          #else
+            -plugin CADD,/Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/Plugins/CADD/CADD_v1.3/annotations/CADD-MORL-ROI-FOR-VEP/GrCH37.CADD-v1.3.otoscopev6v7.tsv.gz,/Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/Plugins/CADD/CADD_v1.3/annotations/CADD-MORL-ROI-FOR-VEP/GrCH37.CADD-InDels-v1.3.otoscopev6v7.tsv.gz
+          #end if
+      #end if
+      #if str( $pick_order ) != "":
+        -pick_order "${pick_order}"
+      #end if
   </command>
   <inputs>
-    <param format="vcf" name="input" type="data" label="Input file"/>
-    
-    <param name="output_format" type="select" label="Output format">
-      <option value="" selected="true">Default</option>
+    <param format="vcf" name="input" type="data" label="Input file" help="-i, --input_file"/>
+
+    <param name="species" type="select" label="Species" help="--species. Species for your data.">
+      <option value="human" selected="true">Human (GRCh37)</option>
+    </param>
+
+    <param name="output_format" type="select" label="Output format" help="--vcf, --gvf">
+      <option value="" selected="true">VEP table</option>
       <option value="-vcf">VCF</option>
       <option value="-gvf">GVF</option>
     </param>
-    
-    <param name="terms" type="select" label="Consequence types">
+ 
+    <param name="transcript_set" type="select" label="Transcript set" help="--refseq, --merged">
+      <option value="" selected="true">Ensembl</option>
+      <option value="-refseq">RefSeq</option>
+      <option value="-merged">Merged (Ensembl and RefSeq)</option>
+    </param>
+
+    <param name="everything" type="select" label="Add extra information to output" help="--everything. Adds --sift b, --polyphen b, --ccds, --uniprot, --hgvs, --symbol, --numbers, --domains, --regulatory, --canonical, --protein, --biotype, --uniprot, --tsl, --appris, --gene_phenotype --gmaf, --maf_1kg, --maf_esp, --maf_esp, --pubmed, and --variant_class.">
+      <option value="" selected="true">no</option>
+      <option value="-everything">yes</option>
+    </param>
+
+    <param name="terms" type="select" label="Consequence types" help="--terms. The type of consequence terms to output.">
       <option value="so" selected="true">Sequence Ontology (SO)</option>
       <option value="ensembl">Ensembl</option>
     </param>
     
-    <param name="sift" type="select" label="SIFT predictions">
+    <param name="plugin_lof" type="boolean" checked="False" truevalue="-plugin LoF,human_ancestor_fa:/Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/Plugins/LoF/human_ancestor.fa.rz" falsevalue="" label="Plugin: LOFTEE (Loss-Of-Function Transcript Effect Estimator)" help="--plugin LoF. Identifies loss-of-function variation. Assesses stop-gained, splice site disrupting, and frameshift variants." />
+
+  <conditional name="cadd_cond"> 
+    <param name="use_cadd" type="boolean" checked="False" label="Plugin: CADD (Combined Annotation Dependent Depletion)" help="--plugin CADD. Scores deleteriousness of SNVs and indels." />
+    <when value="true">
+        <param name="plugin_type" type="select" label="CADD reference files">
+            <option value="full_ref_files" selected="true">Full reference files</option>
+            <option value="subset_ref_files">Subset of reference files (otoscope)</option>
+        </param>
+    </when>
+</conditional>
+
+    <param name="sift" type="select" label="SIFT predictions" help="--sift. Predicts whether an amino acid substitution affects protein function.">
       <option value="">None</option>
       <option value="-sift s">Score only</option>
       <option value="-sift p">Prediction only</option>
       <option value="-sift b" selected="true">Score and prediction</option>
     </param>
     
-    <param name="polyphen" type="select" label="PolyPhen predictions">
+    <param name="polyphen" type="select" label="PolyPhen predictions" help="--polyphen. Predicts the impact of an amino acid substitution on the structure and function of a human protein.">
       <option value="">None</option>
       <option value="-polyphen s">Score only</option>
       <option value="-polyphen p">Prediction only</option>
@@ -38,33 +78,51 @@
     </param>
     
     
-    <param name="check_existing" type="select" label="Check for existing co-located variations">
+    <param name="check_existing" type="select" label="Check for existing co-located variations" help="--check_existing. Checks for the existence of known variants that are co-located with your input.">
       <option value="">no</option>
       <option value="-check_existing" selected="true">yes</option>
     </param>
     
-    <param name="check_ref" type="select" label="Sanity check supplied reference allele against Ensembl reference">
+    <param name="check_ref" type="select" label="Sanity check supplied reference allele against Ensembl reference" help="--check_ref. Warning: Silently skips lines that do not match reference. Do not use with hg19 input.">
       <option value="" selected="true">no</option>
       <option value="-check_ref">yes</option>
     </param>
     
-    <param name="regulatory" type="select" label="Get regulatory consequences">
+    <param name="regulatory" type="select" label="Get regulatory consequences" help="--regulatory. Looks for overlaps with regulatory regions.">
       <option value="">no</option>
       <option value="-regulatory" selected="true">yes</option>
     </param>
     
-    <param name="hgnc" type="select" label="Add HGNC identifiers for genes where available">
+    <param name="symbol" type="select" label="Add gene symbol (e.g. HGNC) (where available) to output" help="--symbol">
       <option value="" selected="true">no</option>
-      <option value="-hgnc">yes</option>
+      <option value="-symbol">yes</option>
     </param>
     
+    <param name="hgvs" type="select" label="Output HGVS identifiers (coding and protein)" help="--hgvs">
+      <option value="" selected="true">no</option>
+      <option value="-hgvs">yes</option>
+    </param>
+
+    <param name="pick" type="boolean" checked="False" truevalue="-pick" falsevalue="" label="Pick one consequence" help="--pick. Exclude all but one consequence per variant. Specify criteria for picking consequence (&quot;Pick order&quot;) below." />
+
+    <param name="flag_pick" type="boolean" checked="False" truevalue="-flag_pick" falsevalue="" label="Add PICK flag to one consequence" help="--flag_pick. Same as --pick, except just adds PICK flag to the chosen consequence and doesn't delete the other consequences." />
+
+    <param name="flag_pick_allele" type="boolean" checked="False" truevalue="-flag_pick_allele" falsevalue="" label="Add PICK flag to one consequence per allele" help="--flag_pick_allele. Same as --flag_pick, except chooses a consequence for each allele." />
+
+    <param name="pick_order" type="text" size="80" label="Pick order" help="--pick_order. Comma-separated order of criteria to use when choosing a consequence with --pick, --flag_pick, etc. Default order: canonical,appris,tsl,biotype,ccds,rank,length">
+      <sanitizer invalid_char="">
+        <valid initial="string.letters"><add value=","/> </valid>
+      </sanitizer>
+    </param>
+
   </inputs>
   <outputs>
     <data format="tabular" name="output" />
+    <data format="html" name="stats_output" />
   </outputs>
 
   <help>
-This tool calculates consequences of variants using Ensembl annotations
+This tool calculates consequences of variants using Ensembl annotations. See http://www.ensembl.org/info/docs/tools/vep/script/vep_options.html for more information on options.
   </help>
 
 </tool>
