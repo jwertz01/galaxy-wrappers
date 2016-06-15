@@ -32,6 +32,12 @@
             #include source=$analysisPreprocessing
         #end if
         
+        #if $cond_intervals.cond_intervals_enabled
+            #for $i, $interval in enumerate($cond_intervals.intervals):
+                ln -s -f ${interval.L} interval_${i}.bed &&
+            #end for
+        #end if
+
         ############################
         ## GATK tool unspecific options
         ############################
@@ -43,8 +49,8 @@
         --log_to_file           ${output_log}
 
         #if $cond_intervals.cond_intervals_enabled
-            #for $interval in $cond_intervals.intervals:
-                --intervals ${interval.L}
+            #for $i, $interval in enumerate($cond_intervals.intervals):
+                --intervals interval_${i}.bed
             #end for
         #end if
 
@@ -78,7 +84,7 @@
       <param name="cond_intervals_enabled" type="boolean" label="Select interval subset to operate on?"/>
       <when value="true">
         <repeat name="intervals" title="genomic interval over which to operate" help="-L,‑‑intervals &amp;lt;intervals&amp;gt;">
-          <param name="L" type="text" value=""/>
+          <param name="L" type="data" format="bed" label="Genomic intervals (BED format)"/>
         </repeat>
       </when>
       <when value="false"/>
