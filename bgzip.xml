@@ -1,0 +1,23 @@
+<tool id="bgzip" name="Bgzip" version="1.0.0">
+    <description>Run bgzip compression on file </description>
+    <command>                    
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/tabix-0.2.6/bgzip -c -f $input> $output
+    </command>
+    <inputs>
+        <param name="input" type="data" label="Input file" />
+    </inputs>
+    <outputs>
+        <data name="output" format="bgzip" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="$input.ext" value="vcf" format="vcf_bgzip" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**Bgzip**: Block compression/decompression utility. Outputs compressed (bgzipped) version of input file.
+
+More info here: http://www.htslib.org/doc/tabix.html
+  </help>
+</tool>

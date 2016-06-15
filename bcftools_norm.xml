@@ -1,0 +1,178 @@
+<tool id="bcftools_norm" name="BCFtools norm" version="1.0.0">
+    <description>Left-align and normalize indels, check if REF alleles match reference, change multiallelic format</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+        #end if
+        #if str( $fasta_ref_cond.set_fasta_ref ) == "True":
+            #if str( $fasta_ref_cond.fasta_cache_hist_cond.cache_hist ) == "history":
+                #if str( $fasta_ref_cond.fasta_cache_hist_cond.fasta_ref_index ) != "None":
+                    ln -s -f $fasta_ref_cond.fasta_cache_hist_cond.fasta_ref fasta_ref_file.${fasta_ref_cond.fasta_cache_hist_cond.fasta_ref.ext}.fa &amp;&amp;
+                    ln -s -f $fasta_ref_cond.fasta_cache_hist_cond.fasta_ref_index fasta_ref_file.${fasta_ref_cond.fasta_cache_hist_cond.fasta_ref.ext}.fa.fai &amp;&amp;
+                #end if
+            #end if
+        #end if
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools norm                    
+        --output "${output_file}"
+        --output-type "${output_type}"
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+        #if str( $targets_file ) != "None":
+            --targets-file "${targets_file}"
+        #end if
+        #if str( $targets ) != "":
+            --targets "${targets}"
+        #end if
+        #if str( $check_ref_cond.set_check_ref ) == "True":
+            #if str( $check_ref_cond.warn ) == "true":
+                #if str( $check_ref_cond.check_ref ) == "None":
+                    --check-ref "w"
+                #else
+                    --check-ref "w${check_ref_cond.check_ref}"
+                #end if
+            #else
+                --check-ref "${check_ref_cond.check_ref}"
+            #end if
+        #end if
+        #if str( $fasta_ref_cond.set_fasta_ref ) == "True":
+            #if str( $fasta_ref_cond.fasta_cache_hist_cond.cache_hist ) == "history":
+                #if str( $fasta_ref_cond.fasta_cache_hist_cond.fasta_ref_index ) != "None":
+                    --fasta-ref "fasta_ref_file.${fasta_ref_cond.fasta_cache_hist_cond.fasta_ref.ext}.fa"
+                #else
+                    --fasta-ref "${fasta_ref_cond.fasta_cache_hist_cond.fasta_ref}"
+                #end if
+            #else
+                --fasta-ref "${fasta_ref_cond.fasta_cache_hist_cond.fasta_ref.fields.path}"
+            #end if
+        #end if
+        #if str( $multiallelics_cond.set_multiallelics ) == "True":
+            #if str( $multiallelics_cond.minus_or_plus ) == "minus":
+                #if str ( $multiallelics_cond.multiallelics ) != "None":
+                    --multiallelics "-${multiallelics_cond.multiallelics}"
+                #else
+                    --multiallelics "-"
+                #end if
+            #else
+                #if str ( $multiallelics_cond.multiallelics ) != "None":
+                    --multiallelics "+${multiallelics_cond.multiallelics}"
+                #else
+                    --multiallelics "+"
+                #end if
+            #end if
+        #end if
+        #if str( $rm_dup ) != "none_selected":
+            --rm-dup "${rm_dup}"
+        #end if
+        ${do_not_normalize}
+        ${strict_filter}
+        #if str( $site_win ) != "":
+            --site-win "${site_win}"
+        #end if
+        #if str( $input_file_index ) != "None":
+            input_file.${input.ext}
+        #else
+            $input
+        #end if
+    </command>
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="output_type" type="select" label="Output data type" help="-O">
+            <option value="v" selected="true">VCF</option>
+            <option value="b">BCF</option>
+        </param>
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="targets_file" type="data" optional="true" label="Targets file" help="-T. Targets specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="targets" type="text" size="80" optional="True" label="Targets list" help="-t. Comma-separated list of targets. Format: [^]chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,^"/> </valid>
+            </sanitizer>
+        </param>
+        <conditional name="fasta_ref_cond">
+            <param name="set_fasta_ref" type="boolean" checked="False" label="Specify FASTA reference sequence" help="-f" />
+            <when value="true">
+                <conditional name="fasta_cache_hist_cond">
+                    <param name="cache_hist" type="select" label="Source for the reference list">
+                        <option value="cached" selected="true">Locally stored</option>
+                        <option value="history">History</option>
+                    </param>
+                    <when value="history">
+                        <param name="fasta_ref" type="data" label="FASTA reference file" help="Reference sequence. Using this option turns on left-alignment and normalization. Set corresponding index below." />
+                        <param name="fasta_ref_index" type="data" optional="True" label="FASTA reference index" help="Run Faidx (SAMtools) Galaxy tool on above reference file to create index. Errors can arise if this index is not specified." />
+                    </when>
+                    <when value="cached">
+                        <param name="fasta_ref" type="select" label="FASTA reference file" help="Reference sequence. Using this option turns on left-alignment and normalization.">
+                            <options from_data_table="picard_indexes">
+                                <filter type="sort_by" column="2" />
+                                <validator type="no_options" message="No indexes are available" />
+                            </options>
+                        </param>
+                    </when>
+                </conditional>
+            </when>
+        </conditional>
+        <param name="do_not_normalize" type="boolean" checked="False" truevalue="--do-not-normalize" falsevalue="" label="Turn off indel normalization" help="-N. Indel normalization automatically occurs when FASTA reference is used. Use this option to disable this behavior." />
+        <conditional name="check_ref_cond">
+            <param name="set_check_ref" type="boolean" checked="False" label="Check REF" help="-c. Choose action when an incorrect or missing REF allele is encountered." />
+            <when value="true">
+                <param name="check_ref" type="select" label="Action" help="Action when an incorrect or missing REF allele is encountered.">
+                    <option value="e">Exit program</option>
+                    <option value="x">Exclude incorrect/missing sites</option>
+                    <option value="s">Set or fix incorrect/missing sites (requires FASTA reference)</option>
+                </param>
+                <param name="warn" type="boolean" checked="False" label="Warn" help="Warn when an incorrect or missing REF allele is encountered." />
+            </when>
+        </conditional>
+        <param name="rm_dup" type="select" label="Remove duplicates" help="-d. For given variant type, if a record is present in multiple files, output only the first instance.">
+            <option value="none_selected" selected="true">None selected</option>
+            <option value="snps">SNPs</option>
+            <option value="indels">Indels</option>
+            <option value="both">Both (SNPs and indels)</option>
+            <option value="any">Any</option>
+        </param>
+        <conditional name="multiallelics_cond">
+            <param name="set_multiallelics" type="boolean" checked="False" label="Modify multiallelic sites" help="-m. Split multiallelic sites into biallelic records, or join biallelic sites into multiallelic records." />
+            <when value="true">
+                <param name="minus_or_plus" type="select" label="Split or join">
+                    <option value="minus" selected="true">Split multiallelic sites into biallelic records</option>    
+                    <option value="plus">Join biallelic sites into multiallelic records</option>
+                </param>      
+                <param name="multiallelics" type="select" label="Sites to split/join" help="">
+                    <option value="snps">SNPs (only SNP records are split/joined)</option>
+                    <option value="indels">Indels (only indel records are split/joined)</option>
+                    <option value="both">Both (SNPs and indels are merged separately into two records)</option>
+                    <option value="any">Any (SNPs and indels are merged into a single record)</option>
+                </param>
+            </when>
+        </conditional>
+        <param name="strict_filter" type="boolean" checked="False" truevalue="--strict-filter" falsevalue="" label="Strict PASS filter" help="-s. When merging biallelics into multiallelics, merged site has value PASS only if all sites being merged have value PASS." />
+        <param name="site_win" type="integer" optional="true" label="Position window" help="-w. Maximum distance between two records to consider when locally sorting variants which changed position during the realignment." />
+    </inputs>
+    <outputs>
+        <data name="output_file" format="vcf" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="output_type" value="b" format="bcf" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools norm**: Left-align and normalize indels, check if REF alleles match the reference, split multiallelic sites into multiple rows, recover multiallelics from multiple rows. Left-alignment and normalization will only be applied if the --fasta-ref option is supplied.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>
+
+
+

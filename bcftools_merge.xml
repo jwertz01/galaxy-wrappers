@@ -1,0 +1,80 @@
+<tool id="bcftools_merge" name="BCFtools merge" version="1.0.0">
+    <description>Merge multiple VCF/BCF files</description>
+    <command>
+        #for $i, $inp in enumerate( $inputs ):
+            #if str( $inp.input_file_index ) != "None":
+                ln -s -f "${inp.input}" "input_file_${i}.${inp.input.ext}" &amp;&amp;
+                #if str( $inp.input.ext ) == "bcf":
+                    ln -s -f "${inp.input_file_index}" "input_file_${i}.${inp.input.ext}.csi" &amp;&amp;
+                #else
+                    ln -s -f "${inp.input_file_index}" "input_file_${i}.${inp.input.ext}.tbi" &amp;&amp;
+                #end if
+            #end if
+        #end for
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools merge                   
+        --output "${output_file}"
+        --output-type "${output_type}"
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+        ${force_samples}
+        #if str( $info_rules ) != "":
+            --info-rules "${info_rules}"
+        #end if
+        #if str( $merge ) != "none_selected":
+            --merge "${merge}"
+        #end if
+
+        #for $i, $inp in enumerate( $inputs ):
+            #if str( $inp.input_file_index ) != "None":
+                "input_file_${i}.${inp.input.ext}"
+            #else
+                "${inp.input}"
+            #end if
+        #end for
+    </command>
+    <inputs>
+        <repeat name="inputs" title="Input files to merge" default="2" min="2">
+            <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+            <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        </repeat>
+        <param name="output_type" type="select" label="Output data type" help="-O">
+            <option value="v" selected="true">VCF</option>
+            <option value="b">BCF</option>
+        </param>
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="info_rules" type="text" size="80" optional="True" label="Rules for merging INFO fields" help="-i. Format: &quot;-|TAG:METHOD[,...]&quot;. METHOD can be either &quot;sum&quot;, &quot;avg&quot;, &quot;min&quot;, &quot;max&quot;, or &quot;join&quot;. Default rule string is &quot;DP:sum,DP4:sum&quot;. &quot;-&quot; disables the default rules." />
+        <param name="force_samples" type="boolean" checked="False" truevalue="--force-samples" falsevalue="" label="Force samples" help="--force-samples. Proceed even if the merged files contain duplicate sample names. Duplicate sample names are resolved by prepending file index to the conflicting sample name." />
+        <param name="merge" type="select" label="Multiallelic record types" help="-m. Control what types of multiallelic records can be created.">
+            <option value="none_selected" selected="true">None selected</option>
+            <option value="none">None (Output multiple records instead of multiallelic records)</option>
+            <option value="snps">SNPs (Allow multiallelic SNP records)</option>
+            <option value="indels">Indels (Allow multiallelic indel records)</option>
+            <option value="both">Both (Allow both SNP and indel multiallelic records)</option>
+            <option value="all">All (Allow SNP records to be merged with indel records)</option>
+            <option value="id">ID (Merge by ID)</option>
+        </param>
+    </inputs>
+    <outputs>
+        <data name="output_file" format="vcf" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="output_type" value="b" format="bcf" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools merge**: Merge multiple VCF/BCF files from non-overlapping sample sets to create one multi-sample file. For example, when merging file A.vcf.gz containing samples S1, S2 and S3 and file B.vcf.gz containing samples S3 and S4, the output file will contain four samples named S1, S2, S3, 2:S3 and S4.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>

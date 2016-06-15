@@ -1,0 +1,224 @@
+<tool id="bcftools_view" name="BCFtools view" version="1.0.0">
+    <description>Convert, view, subset, and filter VCF/BCF files</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+        #end if
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools view
+        ${drop_genotypes}
+        ${header_only}
+        ${no_header}
+        --output-file "${output_file}"
+        --output-type "${output_type}"
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+        #if str( $targets ) != "":
+            --targets "${targets}"
+        #end if
+        #if str( $samples ) != "":
+            --samples "${samples}"
+        #end if
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+        #if str( $targets_file ) != "None":
+            --targets-file "${targets_file}"
+        #end if
+        #if str( $samples_file ) != "None":
+            --samples-file "${samples_file}"
+        #end if
+        #if str( $apply_filters ) != "":
+            --apply-filters "${apply_filters}"
+        #end if
+        #if str( $min_ac_cond.set_min_ac ) == "True":
+            --min-ac $min_ac_cond.min_ac:$min_ac_cond.min_ac_type
+        #end if
+        #if str( $max_ac_cond.set_max_ac ) == "True":
+            --max-ac $max_ac_cond.max_ac:$max_ac_cond.max_ac_type
+        #end if
+        #if str( $min_af_cond.set_min_af ) == "True":
+            --min-af $min_af_cond.min_af:$min_af_cond.min_af_type
+        #end if
+        #if str( $max_af_cond.set_max_af ) == "True":
+            --max-af $max_af_cond.max_af:$max_af_cond.max_af_type
+        #end if
+        #if str( $expr_cond.set_expr ) == "True":
+            #if str( $expr_cond.include_or_exclude ) == "include":
+                --include "${expr_cond.expr}"
+            #else
+                --exclude "${expr_cond.expr}"
+            #end if
+        #end if
+        #if str( $genotype_cond.set_genotype ) == "True":
+            #if str( $genotype_cond.include_or_exclude ) == "include":
+                --genotype $genotype_cond.genotype
+            #else
+                --genotype ^$genotype_cond.genotype
+            #end if
+        #end if
+        #if str( $var_type_cond.set_var_type ) == "True":
+            #if str( $var_type_cond.include_or_exclude ) == "include":
+                --types $var_type_cond.var_types
+            #else
+                --exclude-types $var_type_cond.var_types
+            #end if
+        #end if
+        ${uncalled}
+        ${exclude_uncalled}
+        ${private}
+        ${exclude_private}
+
+        #if str( $input_file_index ) != "None":
+            input_file.${input.ext}
+        #else
+            $input
+        #end if
+    </command>
+
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="output_type" type="select" label="Output data type" help="-O">
+            <option value="v" selected="true">VCF</option>
+            <option value="b">BCF</option>
+        </param>
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="targets_file" type="data" optional="true" label="Targets file" help="-T. Targets specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="targets" type="text" size="80" optional="True" label="Targets list" help="-t. Comma-separated list of targets. Format: [^]chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,^"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="samples_file" type="data" optional="true" label="Samples file" help="-S. File of sample names to include. One sample per line."/>
+        <param name="samples" type="text" size="80" optional="True" label="Samples list" help="-s. Comma-separated list of samples to include or exclude. (Excludes if prefixed with ^)" />
+        <param name="apply_filters" type="text" size="80" optional="True" label="Apply filters" help="-f. Comma-separated list of strings. Keeps only sites where FILTER column contains one of these strings." />
+        <param name="drop_genotypes" type="boolean" checked="False" truevalue="--drop-genotypes" falsevalue="" label="Drop individual genotype information" help="-G" />
+        <param name="no_header" type="boolean" checked="False" truevalue="--no-header" falsevalue="" label="Suppress the header in VCF output" help="-H" />
+        <param name="header_only" type="boolean" checked="False" truevalue="--header-only" falsevalue="" label="Output the VCF header only" help="-h" />
+        <conditional name="min_ac_cond">
+            <param name="set_min_ac" type="boolean" checked="False" label="Set minimum allele count" help="-c" />
+            <when value="true">
+                <param name="min_ac" type="integer" optional="true" label="Minimum allele count" help="Minimum allele count of sites to be printed, for given allele type." />
+                <param name="min_ac_type" type="select" label="Allele type">
+                    <option value="nref" selected="True">Non-reference</option>
+                    <option value="alt1">1st alternate</option>
+                    <option value="minor">Minor (least frequent)</option>
+                    <option value="major">Major (most frequent)</option>
+                    <option value="nonmajor">Nonmajor (Sum of all but most frequent)</option>
+                </param>
+            </when>
+        </conditional>
+        <conditional name="max_ac_cond">
+            <param name="set_max_ac" type="boolean" checked="False" label="Set maximum allele count" help="-C" />
+            <when value="true">
+                <param name="max_ac" type="integer" optional="true" label="Maximum allele count" help="Maximum allele count of sites to be printed, for given allele type." />
+                <param name="max_ac_type" type="select" label="Allele type">
+                    <option value="nref" selected="True">Non-reference</option>
+                    <option value="alt1">1st alternate</option>
+                    <option value="minor">Minor (least frequent)</option>
+                    <option value="major">Major (most frequent)</option>
+                    <option value="nonmajor">Nonmajor (Sum of all but most frequent)</option>
+                </param>
+            </when>
+        </conditional>
+
+        <conditional name="min_af_cond">
+            <param name="set_min_af" type="boolean" checked="False" label="Set minimum allele frequency" help="-q" />
+            <when value="true">
+                <param name="min_af" type="integer" optional="true" label="Minimum allele frequency" help="Minimum allele frequency of sites to be printed, for given allele type." />
+                <param name="min_af_type" type="select" label="Allele type">
+                    <option value="nref" selected="True">Non-reference</option>
+                    <option value="alt1">1st alternate</option>
+                    <option value="minor">Minor (least frequent)</option>
+                    <option value="major">Major (most frequent)</option>
+                    <option value="nonmajor">Nonmajor (Sum of all but most frequent)</option>
+                </param>
+            </when>
+        </conditional>
+        <conditional name="max_af_cond">
+            <param name="set_max_af" type="boolean" checked="False" label="Set maximum allele frequency" help="-Q" />
+            <when value="true">
+                <param name="max_af" type="integer" optional="true" label="Maximum allele frequency" help="Maximum allele frequency of sites to be printed, for given allele type." />
+                <param name="max_af_type" type="select" label="Allele type">
+                    <option value="nref" selected="True">Non-reference</option>
+                    <option value="alt1">1st alternate</option>
+                    <option value="minor">Minor (least frequent)</option>
+                    <option value="major">Major (most frequent)</option>
+                    <option value="nonmajor">Nonmajor (Sum of all but most frequent)</option>
+                </param>
+            </when>
+        </conditional>
+
+        <conditional name="genotype_cond">
+            <param name="set_genotype" type="boolean" checked="False" label="Filter by genotype" help="-g. Include only, or exclude, sites with one or more of given genotype."/>
+            <when value="true">
+                <param name="include_or_exclude" type="select" label="Include or exclude by genotype">
+                    <option value="include">Include</option>
+                    <option value="exclude">Exclude</option>
+                </param>
+                <param name="genotype" type="select" label="Genotype">
+                    <option value="hom">Homozygous</option>
+                    <option value="het">Heterozygous</option>
+                    <option value="miss">Missing</option>
+                </param>
+            </when>
+        </conditional>
+
+        <conditional name="expr_cond">
+            <param name="set_expr" type="boolean" checked="False" label="Filter by expression" help="-i, -e. Include/ exclude sites for which expression is true. Must use valid expression."/>
+            <when value="true">
+                <param name="include_or_exclude" type="select" label="Include or exclude by expression">
+                    <option value="include">Include</option>
+                    <option value="exclude">Exclude</option>
+                </param>
+                <param name="expr" type="text" size="80" label="Expression">
+                    <sanitizer invalid_char="">
+                        <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+                    </sanitizer>
+                </param>
+            </when>
+        </conditional>
+
+        <conditional name="var_type_cond">
+            <param name="set_var_type" type="boolean" checked="False" label="Filter by variant type" help="-v, -V. Include/ exclude sites where any ALT allele is one of the given variant types."/>
+            <when value="true">
+                <param name="include_or_exclude" type="select" label="Include or exclude by variant type">
+                    <option value="include">Include</option>
+                    <option value="exclude">Exclude</option>
+                </param>
+                <param name="var_types" type="select" multiple="true" display="checkboxes" label="Variant type">
+                    <option value="snps">SNPs</option>
+                    <option value="indels">Indels</option>
+                    <option value="mnps">MNPs</option>
+                    <option value="other">Other</option>
+                </param>
+            </when>
+        </conditional>
+
+        <param name="uncalled" type="boolean" checked="False" truevalue="--uncalled" falsevalue="" label="Print sites without a called genotype" help="-u" />
+        <param name="exclude_uncalled" type="boolean" checked="False" truevalue="--exclude-uncalled" falsevalue="" label="Exclude sites without a called genotype" help="-U" />
+        <param name="private" type="boolean" checked="False" truevalue="--private" falsevalue="" label="Print sites where only the subset samples carry a non-reference allele" help="-x. Requires samples file or samples list."/>
+        <param name="exclude_private" type="boolean" checked="False" truevalue="--exclude-private" falsevalue="" label="Exclude sites where only the subset samples carry a non-reference allele" help="-X. Requires samples file or samples list."/>
+    </inputs>
+    <outputs>
+        <data name="output_file" format="vcf" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="output_type" value="b" format="bcf" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools view**: View, subset and filter VCF or BCF files by position and filtering expression. Convert between VCF and BCF. Former bcftools subset.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>

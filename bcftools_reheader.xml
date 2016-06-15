@@ -1,0 +1,39 @@
+<tool id="bcftools_reheader" name="BCFtools reheader" version="1.0.0">
+    <description>Modify header of VCF/BCF files, change sample names</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+        #end if
+
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools reheader
+        --output "${output_file}"
+        #if str( $header ) != "None":
+            --header "${header}"
+        #end if
+        #if str( $samples ) != "None":
+            --samples "${samples}"
+        #end if
+        #if str( $input_file_index ) != "None":
+            input_file.${input.ext}
+        #else
+            $input
+        #end if
+    </command>
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="header" type="data" optional="True" label="New VCF header" help="-h"/>
+        <param name="samples" type="data" optional="True" label="New sample names" help="-s. Either new sample names, each on a separate line, in the same order as samples appear in the VCF file, or &quot;old_name new_name\n&quot; pairs separated by whitespaces, each on a separate line." />
+    </inputs>
+    <outputs>
+        <data name="output_file" format_source="input" label="${tool.name} on ${on_string}" />
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools reheader**: Modify header of VCF/BCF files, change sample names.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>

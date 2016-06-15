@@ -1,0 +1,108 @@
+<tool id="bcftools_query" name="BCFtools query" version="1.0.0">
+    <description>Output VCF/BCF fields in user-defined format</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+        #end if
+
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools query                    
+        --output "${output_file}"
+        --format "${format}"
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+        #if str( $targets_file ) != "None":
+            --targets-file "${targets_file}"
+        #end if
+        #if str( $targets ) != "":
+            --targets "${targets}"
+        #end if
+        #if str( $samples_file ) != "None":
+            --samples-file "${samples_file}"
+        #end if
+        #if str( $samples ) != "":
+            --samples "${samples}"
+        #end if
+        #if str( $expr_cond.set_expr ) == "True":
+            #if str( $expr_cond.include_or_exclude ) == "include":
+                --include "${expr_cond.expr}"
+            #else
+                --exclude "${expr_cond.expr}"
+            #end if
+        #end if
+        #if str( $collapse ) != "none_selected":
+            --collapse "${collapse}"
+        #end if
+        ${print_header}
+        ${list_samples}
+        ${allow_undef_tags}
+
+        #if str( $input_file_index ) != "None":
+            input_file.${input.ext}
+        #else
+            $input
+        #end if
+    </command>
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="format" type="text" size="80" label="Output format string (required)" help="-f. Example: &quot;%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n&quot;. See BCFtools documentation for more info.">
+            <sanitizer invalid_char="">
+                <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+            </sanitizer>
+        </param>
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="targets_file" type="data" optional="true" label="Targets file" help="-T. Targets specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="targets" type="text" size="80" optional="True" label="Targets list" help="-t. Comma-separated list of targets. Format: [^]chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,^"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="samples_file" type="data" optional="true" label="Samples file" help="-S. File of sample names to include. One sample per line."/>
+        <param name="samples" type="text" size="80" optional="True" label="Samples list" help="-s. Comma-separated list of samples to include or exclude. (Excludes if prefixed with ^)" />
+        <conditional name="expr_cond">
+            <param name="set_expr" type="boolean" checked="False" label="Filter by expression" help="-i, e. Include/ exclude sites for which expression is true. Must use valid expression."/>
+            <when value="true">
+                <param name="include_or_exclude" type="select" label="Include or exclude by expression">
+                    <option value="include">Include</option>
+                    <option value="exclude">Exclude</option>
+                </param>
+                <param name="expr" type="text" size="80" label="Expression">
+                    <sanitizer invalid_char="">
+                        <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+                    </sanitizer>
+                </param>
+            </when>
+        </conditional>
+        <param name="collapse" type="select" label="Collapse records" help="-c. Controls how to treat records with duplicate positions, and defines compatible records across multiple input files.">
+            <option value="none_selected" selected="true">None selected</option>
+            <option value="some">Some (only records where some subset of ALT alleles match are compatible)</option>
+            <option value="all">All (all records are compatible, regardless of whether ALT alleles match)</option>
+            <option value="snps">SNPs (all SNP records are compatible, regardless of whether ALT alleles match) </option>
+            <option value="indels">Indels (all indel records are compatible, regardless of whether REF and ALT alleles match) </option>
+            <option value="both">Both (SNPs are compatible and indels are compatible)</option>
+        </param>
+        <param name="print_header" type="boolean" checked="False" truevalue="--print-header" falsevalue="" label="Print header" help="-H" />
+        <param name="list_samples" type="boolean" checked="False" truevalue="--list-samples" falsevalue="" label="Print sample names to stdout, then exit" help="-l" />
+        <param name="allow_undef_tags" type="boolean" checked="False" truevalue="--allow-undef-tags" falsevalue="" label="Allow undefined tags" help="-u. If there are undefined tags in the format string, print &quot;.&quot; instead of throwing an error." />
+    </inputs>
+    <outputs>
+        <data name="output_file" format="txt" label="${tool.name} on ${on_string}" />
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools query**: Extract fields from VCF or BCF files and output them in user-defined format.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>

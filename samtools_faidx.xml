@@ -1,0 +1,24 @@
+<tool id="samtools_faidx" name="Faidx (SAMtools)" version="1.0.0">
+    <description>Index FASTA file using samtools faidx command</description>
+    <command>
+        ln -s -f $input faidx_in.${input.ext} &amp;&amp;
+
+        samtools faidx
+
+        faidx_in.${input.ext} &amp;&amp;
+        cp faidx_in.${input.ext}.fai $output
+    </command>
+    <inputs>
+        <param name="input" type="data" label="FASTA input file" />
+    </inputs>
+    <outputs>
+        <data name="output" label="${tool.name} on ${on_string}" />
+    </outputs>
+    <help>
+**About this tool**
+
+**Samtools faidx**: Index reference sequence in the FASTA format or extract subsequence from indexed reference sequence. Outputs index of input file.
+
+More info here: http://www.htslib.org/doc/samtools.html
+  </help>
+</tool>

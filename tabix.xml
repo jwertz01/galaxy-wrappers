@@ -1,0 +1,88 @@
+<tool id="tabix" name="Tabix" version="1.0.0">
+    <description>Index tab-delimited file</description>
+    <command>
+        ln -s -f $input tabix_in.${input.ext} &amp;&amp;
+        /Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/tabix-0.2.6/tabix -f
+
+        #if str( $filetype_cond.filetype ) == "gff":
+            -p gff
+        #elif str( $filetype_cond.filetype ) == "bed":
+            -p bed
+        #elif str( $filetype_cond.filetype ) == "sam":
+            -p sam
+        #elif str( $filetype_cond.filetype ) == "vcf":
+            -p vcf
+
+        #elif str( $input.ext ) == "gff":
+            -p gff
+        #elif str( $input.ext ) == "bed":
+            -p bed
+        #elif str( $input.ext ) == "sam":
+            -p sam
+        #elif str( $input.ext ) == "vcf":
+            -p vcf
+        #elif str( $input.ext ) == "vcf_bgzip":
+            -p vcf
+        #end if
+
+        #if str( $filetype_cond.filetype ) == "other":
+            #if str( $filetype_cond.seq_name_column ) != "":
+                -s ${filetype_cond.seq_name_column}
+            #end if
+            #if str( $filetype_cond.start_column ) != "":
+                -b ${filetype_cond.start_column}
+            #end if
+            #if str( $filetype_cond.end_column ) != "":
+                -e ${filetype_cond.end_column}
+            #end if
+            #if str( $filetype_cond.skip_first_lines ) != "":
+                -S ${filetype_cond.skip_first_lines}
+            #end if
+            #if str( $filetype_cond.comment_symbol ) != "":
+                -c "${filetype_cond.comment_symbol}"
+            #end if
+            #if str( $filetype_cond.zero_based ) == "true":
+                -0
+            #end if
+        #end if
+        tabix_in.${input.ext} &amp;&amp;
+        cp tabix_in.${input.ext}.tbi $output
+    </command>
+    <inputs>
+        <param name="input" type="data" label="Input file" help="File must be bgzip-compressed and tab-delimited. Run Bgzip Galaxy tool if file is not bgzip-compressed."/>
+        <conditional name="filetype_cond">
+            <param name="filetype" type="select" label="Input filetype" help="-p. Set filetype of input file in case it is not detected properly.">
+                <option value="none" selected="True">None selected</option>
+                <option value="gff">GFF</option>
+                <option value="bed">BED</option>
+                <option value="sam">SAM</option>
+                <option value="vcf">VCF</option>
+                <option value="other">Other</option>
+            </param>
+            <when value="other">
+                <param name="seq_name_column" type="integer" optional="true" label="Sequence name column" help="-s" />
+                <param name="start_column" type="integer" optional="true" label="Start column" help="-b" />
+                <param name="end_column" type="integer" optional="true" label="End column" help="-e" />
+                <param name="skip_first_lines" type="integer" optional="true" label="Skip first n lines" help="-S" />
+                <param name="comment_symbol" type="text" label="Symbol for comment/meta lines" help="-c">
+                    <sanitizer invalid_char="">
+                        <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+                    </sanitizer>
+                </param>
+                <param name="zero_based" type="boolean" checked="False" label="Use zero-based coordinates" help="-0" />
+            </when>
+
+        </conditional>
+
+    </inputs>
+    <outputs>
+        <data name="output" label="${tool.name} on ${on_string}" />
+    </outputs>
+    <help>
+**About this tool**
+
+**Tabix**: Generic indexer for TAB-delimited genome position files. Outputs index of input file.
+
+More info here: http://www.htslib.org/doc/tabix.html
+  </help>
+</tool>

@@ -1,0 +1,157 @@
+<tool id="bcftools_filter" name="BCFtools filter" version="1.0.0">
+    <description>Apply fixed-threshold filters</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+        #end if
+
+        #set $bcftools_path="/Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools"                    
+
+        #set $max_index_filter = -1
+        #for $i, $a in enumerate( $expr_repeat ):
+            #set $max_index_filter = i
+        #end for
+
+        #for $i, $a in enumerate( $expr_repeat ):
+            $bcftools_path filter --output-type u
+
+            #if str( $a.include_or_exclude ) == "include":
+                --include "${a.expr}"
+            #else
+                --exclude "${a.expr}"
+            #end if
+
+            #if str( $a.mode_plus ) == "true":
+                #if str( $a.mode_x ) == "true":
+                    --mode +x
+                #else
+                    --mode +
+                #end if
+            #elif str( $a.mode_x ) == "true"
+                --mode x
+            #end if
+            #if str( $a.soft_filter_cond.set_soft_filter ) == "True":
+                #if str( $a.soft_filter_cond.string_or_plus_cond.string_or_plus ) == "use_plus":
+                    --soft-filter +
+                #else
+                    --soft-filter "${a.soft_filter_cond.string_or_plus_cond.str}"
+                #end if
+            #end if
+            #if str( $a.set_gts_cond.set_gts ) == "True":
+                #if str( $a.set_gts_cond.gts ) == "period":
+                    --set-GTs .
+                #else
+                    --set-GTs 0
+                #end if
+            #end if
+
+            #if i == 0:
+                #if str( $input_file_index ) != "None":
+                    input_file.${input.ext}
+                #else
+                    $input
+                #end if
+            #end if
+            |
+
+        #end for
+
+        $bcftools_path filter
+        --output "${output_file}"
+        --output-type "${output_type}"
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+        #if str( $targets_file ) != "None":
+            --targets-file "${targets_file}"
+        #end if
+        #if str( $targets ) != "":
+            --targets "${targets}"
+        #end if
+
+        #if $max_index_filter &lt; 0:
+            #if str( $input_file_index ) != "None":
+                input_file.${input.ext}
+            #else
+                $input
+            #end if
+        #end if
+    </command>
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="output_type" type="select" label="Output data type">
+            <option value="v" selected="true">VCF</option>
+            <option value="b">BCF</option>
+        </param>
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="targets_file" type="data" optional="true" label="Targets file" help="-T. Targets specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="targets" type="text" size="80" optional="True" label="Targets list" help="-t. Comma-separated list of targets. Format: [^]chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,^"/> </valid>
+            </sanitizer>
+        </param>
+        <repeat name="expr_repeat" title="Filter by expression" help="-i, e. Include/ exclude sites for which expression is true. Must use valid expression. Pipes multiple filters.">
+
+            <param name="include_or_exclude" type="select" label="Include or exclude by expression">
+                <option value="include">Include</option>
+                <option value="exclude">Exclude</option>
+            </param>
+            <param name="expr" type="text" size="80" label="Expression">
+                <sanitizer invalid_char="">
+                    <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+                </sanitizer>
+            </param>
+
+            <param name="mode_x" type="boolean" checked="False" label="For sites that pass filter, reset filter to &quot;PASS&quot;" help="-m x. Default: When FILTER string is empty, set filter to &quot;PASS&quot;. Do not change FILTER string otherwise."/>
+            <param name="mode_plus" type="boolean" checked="False" label="For sites that fail filter, append new FILTER string to existing FILTER string" help="-m +. Default: Replace existing FILTER string with new FILTER string."/>
+            <conditional name="soft_filter_cond">
+                <param name="set_soft_filter" type="boolean" checked="False" label="Annotate FILTER column" help="-s"/>
+                <when value="true">
+                    <conditional name="string_or_plus_cond">
+                        <param name="string_or_plus" type="select" label="Annotation string">
+                            <option value="use_plus" selected="true">Annotate with a pre-generated unique string  (&quot;Filter1&quot;, &quot;Filter2&quot;, etc.)</option>
+                            <option value="use_str">Choose annotation string</option>
+                        </param>
+                        <when value="use_str">
+                            <param name="str" type="text" size="80" label="String to annotate with" />
+                        </when>
+                    </conditional>
+                </when>
+            </conditional>
+            <conditional name="set_gts_cond">
+                <param name="set_gts" type="boolean" checked="False" label="Set genotype of samples that fail filter" help="-S"/>
+                <when value="true">
+                    <param name="gts" type="select" label="Genotype of failed samples">
+                        <option value="period" selected="true">.</option>
+                        <option value="ref_allele">Reference allele</option>
+                    </param>
+                </when>
+            </conditional>
+        </repeat>
+    </inputs>
+    <outputs>
+        <data name="output_file" format="vcf" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="output_type" value="b" format="bcf" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools filter**: Apply fixed-threshold filters.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>
+

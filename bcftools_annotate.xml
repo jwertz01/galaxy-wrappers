@@ -1,0 +1,177 @@
+<tool id="bcftools_annotate" name="BCFtools annotate" version="1.0.0">
+    <description>Add or remove annotations</description>
+    <command>
+        #if str( $input_file_index ) != "None":
+            ln -s -f $input input_file.${input.ext} &amp;&amp;
+            #if str( $input.ext ) == "bcf":
+                ln -s -f $input_file_index input_file.${input.ext}.csi &amp;&amp;
+            #else
+                ln -s -f $input_file_index input_file.${input.ext}.tbi &amp;&amp;
+            #end if
+        #end if
+
+        #for $i, $a in enumerate( $annotations_repeat ):
+            ln -s -f ${a.annotations} annot_file_${i}.${a.annotations.ext} &amp;&amp;
+            #if str( $a.annotations.ext ) == "bcf":
+                ln -s -f ${a.annotations_index} annot_file_${i}.${a.annotations.ext}.csi &amp;&amp;
+            #else
+                ln -s -f ${a.annotations_index} annot_file_${i}.${a.annotations.ext}.tbi &amp;&amp;
+            #end if
+        #end for
+
+        #set $bcftools_path="/Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/bcftools"
+        #set $bgzip_path="/Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/tabix-0.2.6/bgzip"
+        #set $tabix_path="/Shared/Clngx/clngx-2-dev/galaxy-dist/tools/bcftools/tabix-0.2.6/tabix"
+        #set $max_index_annotations = -1
+
+        #for $i, $a in enumerate( $annotations_repeat ):
+            #set $max_index_annotations = i
+        #end for
+        #for $i, $a in enumerate( $annotations_repeat ):
+            #if $i != 0:
+                $bgzip_path -c -f temp_${i - 1}.vcf> temp_${i - 1}.vcf_bgzip &amp;&amp;
+                $tabix_path -f -p vcf temp_${i - 1}.vcf_bgzip &amp;&amp;
+            #end if
+            $bcftools_path annotate --annotations annot_file_${i}.${a.annotations.ext}
+            --output-type v
+            #if str( $i ) != $max_index_annotations:
+                --output temp_${i}.vcf
+            #end if
+            #if str( $a.columns ) != "":
+                --columns "${a.columns}"
+            #end if
+            #if str( $a.mark_sites_cond.set_mark_sites ) == "True":
+                --mark-sites
+                #if str( $a.mark_sites_cond.present_or_absent ) == "present":
+                    "+${a.mark_sites_cond.new_tag}"
+                #else
+                    "-${a.mark_sites_cond.new_tag}"
+                #end if
+            #end if
+            #if str( $a.header_lines ) != "None":
+                --header-lines "${a.header_lines}"
+            #end if
+            #if $i == 0:
+                #if str( $input_file_index ) != "None":
+                    input_file.${input.ext}
+                #else
+                    $input
+                #end if
+            #else
+                temp_${i - 1}.vcf_bgzip
+            #end if
+            &amp;&amp;
+
+        #end for
+
+        #if $max_index_annotations &gt;= 0:
+            $bgzip_path -c -f temp_${max_index_annotations}.vcf> temp_${max_index_annotations}.vcf_bgzip &amp;&amp;
+            $tabix_path -f -p vcf temp_${max_index_annotations}.vcf_bgzip &amp;&amp;
+        #end if
+        $bcftools_path annotate
+        --output "${output_file}"
+        --output-type "${output_type}"
+        #if str( $regions_file ) != "None":
+            --regions-file "${regions_file}"
+        #end if
+
+        #if str( $regions ) != "":
+            --regions "${regions}"
+        #end if
+       #if str( $samples_file ) != "None":
+            --samples-file "${samples_file}"
+        #end if
+        #if str( $samples ) != "":
+            --samples "${samples}"
+        #end if
+        #if str( $expr_cond.set_expr ) == "True":
+            #if str( $expr_cond.include_or_exclude ) == "include":
+                --include "${expr_cond.expr}"
+            #else
+                --exclude "${expr_cond.expr}"
+            #end if
+        #end if
+        #if str( $rename_chrs ) != "None":
+            --rename-chrs "${rename_chrs}"
+        #end if
+        #if str( $remove ) != "":
+            --remove "${remove}"
+        #end if
+
+        #if $max_index_annotations &lt; 0:
+            #if str( $input_file_index ) != "None":
+                input_file.${input.ext}
+            #else
+                $input
+            #end if
+        #else
+            temp_${max_index_annotations}.vcf_bgzip
+        #end if
+
+    </command>
+    <inputs>
+        <param name="input" type="data" format="vcf,bcf,bgzip" label="VCF or BCF input file" help="Input file can optionally be compressed and indexed using Bgzip and Tabix Galaxy tools. In this case, select bgzipped file here and index below."/>
+        <param name="input_file_index" type="data" optional="true" label="Input file index" help="Tabix-generated index for input file. Run Tabix Galaxy tool on bgzipped input file to create index."/>
+        <param name="output_type" type="select" label="Output data type" help="-O">
+            <option value="v" selected="true">VCF</option>
+            <option value="b">BCF</option>
+        </param>
+        <repeat name="annotations_repeat" title="Annotation files" help="-a, -c, -m, -h">
+            <param name="annotations" type="data" label="Compressed annotation file" help="-a. Bgzip-compressed VCF/ BED/ tab-delimited file with annotations. Run Bgzip Galaxy tool to compress annotation file."/>
+            <param name="annotations_index" type="data" label="Compressed annotation file index" help="Tabix-generated index for annotation file. Run Tabix Galaxy tool on bgzipped annotation file to create index."/>
+            <param name="columns" type="text" size="80" label="Annotation file columns" help="-c. Comma-separated list of columns or tags to carry over from the annotation file." />
+            <conditional name="mark_sites_cond">
+                <param name="set_mark_sites" type="boolean" checked="False" label="Mark present/absent sites" help="-m. Annotate sites which are present or absent in the annotation file with a new INFO/TAG flag. Note: BCFtools has not implemented this yet for VCF files."/>
+                <when value="true">
+                    <param name="present_or_absent" type="select" label="Mark present or absent sites">
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                    </param>
+                    <param name="new_tag" type="text" size="80" label="New INFO/TAG flag" />
+                </when>
+            </conditional>
+            <param name="header_lines" type="data" optional="true" label="Header lines" help="-h. File containing lines to append to VCF header."/>
+        </repeat>
+
+        <param name="regions_file" type="data" optional="true" label="Regions file" help="-R. Regions specified in a VCF, BED, or tab-delimited file with columns CHROM, POS, and, optionally, POS_TO."/>
+        <param name="regions" type="text" size="80" optional="True" label="Regions list" help="-r. Comma-separated list of regions. Format: chr|chr:pos|chr:from-to|chr:from-[,...]">
+            <sanitizer invalid_char="">
+                <valid initial="string.digits"><add value="CHRchr-:,"/> </valid>
+            </sanitizer>
+        </param>
+        <param name="samples_file" type="data" optional="true" label="Samples file" help="-S. File of sample names to include. One sample per line."/>
+        <param name="samples" type="text" size="80" optional="True" label="Samples list" help="-s. Comma-separated list of samples to include or exclude. (Excludes if prefixed with ^)" />
+        <conditional name="expr_cond">
+            <param name="set_expr" type="boolean" checked="False" label="Filter by expression" help="-i, -e. Include/ exclude sites for which expression is true. Must use valid expression."/>
+            <when value="true">
+                <param name="include_or_exclude" type="select" label="Include or exclude by expression">
+                    <option value="include">Include</option>
+                    <option value="exclude">Exclude</option>
+                </param>
+                <param name="expr" type="text" size="80" label="Expression">
+                    <sanitizer invalid_char="">
+                        <valid initial="string.letters,string.digits"><add value="~`!@#$%^&amp;*()-_=+[{]}\|;:'&quot;,&lt;.&gt;?/ " /> </valid>
+                    </sanitizer>
+                </param>
+            </when>
+        </conditional>
+        <param name="rename_chrs" type="data" optional="true" label="Rename chromosomes" help="--rename-chrs. File containing chromosome renaming map, with &quot;old_name new_name\n&quot; pairs separated by whitespaces, each on a separate line."/>
+        <param name="remove" type="text" size="80" label="List of annotations to remove" help="-x. Comma-separated list of annotations to remove." />
+    </inputs>
+    <outputs>
+        <data name="output_file" format="vcf" label="${tool.name} on ${on_string}">
+            <change_format>
+                <when input="output_type" value="b" format="bcf" />
+            </change_format>
+        </data>
+    </outputs>
+    <help>
+**About this tool**
+
+**BCFtools annotate**: Add or remove annotations.
+
+Please see https://samtools.github.io/bcftools/bcftools.html for more info on options.
+  </help>
+</tool>
+
+
