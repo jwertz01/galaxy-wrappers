@@ -189,8 +189,12 @@
 		      <param name="read_filter_type_selector" type="select" label="Read Filter Type">
 		        <option value="MaxReadLength" selected="True">MaxReadLength</option>
 		        <option value="ZeroMappingQualityRead">ZeroMappingQualityRead</option>
+		        <option value="NotPrimaryAlignment">NotPrimaryAlignment</option>
 		      </param>
 	          <when value="ZeroMappingQualityRead">
+	              <!-- no extra options -->
+	          </when>
+	          <when value="NotPrimaryAlignment">
 	              <!-- no extra options -->
 	          </when>
 	          <when value="MaxReadLength">
