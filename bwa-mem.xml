@@ -75,7 +75,6 @@
         -m "${analysis_type.algorithmic_options.m}"
         ${analysis_type.algorithmic_options.S}
         ${analysis_type.algorithmic_options.P}
-        ${analysis_type.algorithmic_options.e}
       #end if
 
       #if str( $analysis_type.scoring_options.scoring_options_selector ) == "set":             ## Scoring options
@@ -210,7 +209,7 @@
       </when>
       <when value="full">
         <conditional name="algorithmic_options">
-          <param name="algorithmic_options_selector" type="select" label="Set algorithmic options?" help="Sets -k, -w, -d, -r, -y, -c, -D, -W, -m, -S, -P, and -e options.">
+          <param name="algorithmic_options_selector" type="select" label="Set algorithmic options?" help="Sets -k, -w, -d, -r, -y, -c, -D, -W, -m, -S, and -P options.">
             <option value="set">Set</option>
             <option value="do_not_set" selected="True">Do not set</option>
           </param>
@@ -226,7 +225,6 @@
             <param name="m" type="integer" value="50" label="Perform at most this many rounds of mate rescues for each read" help="-m; default=50"/>
             <param name="S" type="boolean" truevalue="-S" falsevalue="" label="Skip mate rescue" help="-S"/>
             <param name="P" type="boolean" truevalue="-P" falsevalue="" label="Skip pairing; mate rescue performed unless -S also in use" help="-P"/>
-            <param name="e" type="boolean" truevalue="-e" falsevalue="" label="Discard full-length exact matches" help="-e"/>
           </when>
           <when value="do_not_set">
             <!-- do nothing -->
@@ -372,7 +370,6 @@ Algorithm options::
        -m INT        perform at most INT rounds of mate rescues for each read [50]
        -S            skip mate rescue
        -P            skip pairing; mate rescue performed unless -S also in use
-       -e            discard full-length exact matches
 
 Scoring options::
 
