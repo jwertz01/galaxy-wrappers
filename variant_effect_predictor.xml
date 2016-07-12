@@ -41,9 +41,10 @@
       <option value="-merged">Merged (Ensembl and RefSeq)</option>
     </param>
 
-    <param name="everything" type="select" label="Add extra information to output" help="--everything. Adds --sift b, --polyphen b, --ccds, --uniprot, --hgvs, --symbol, --numbers, --domains, --regulatory, --canonical, --protein, --biotype, --uniprot, --tsl, --appris, --gene_phenotype --gmaf, --maf_1kg, --maf_esp, --maf_esp, --pubmed, and --variant_class.">
-      <option value="" selected="true">no</option>
-      <option value="-everything">yes</option>
+    <param name="everything" type="select" label="Add extra information to output" help="--everything. Adds --sift b, --polyphen b, --ccds, --uniprot, --hgvs, --symbol, --numbers, --domains, --regulatory, --canonical, --protein, --biotype, --uniprot, --tsl, --appris, --gene_phenotype --gmaf, --maf_1kg, --maf_esp, --maf_exac, --pubmed, and --variant_class.">
+      <option value="" selected="true">No</option>
+      <option value="-everything">Everything</option>
+      <option value="-sift b -polyphen b -ccds -uniprot -hgvs -symbol -numbers -domains -regulatory -canonical -protein -biotype -uniprot -tsl -appris -gene_phenotype -gmaf -pubmed -variant_class">Everything (no --maf_1kg, --maf_esp, --maf_exac)</option>
     </param>
 
     <param name="terms" type="select" label="Consequence types" help="--terms. The type of consequence terms to output.">
