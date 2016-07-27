@@ -219,8 +219,8 @@ class FTPFileField(BaseField):
             for upload in uploads:
                 rval += FTPFileField.trow % ( prefix, self.name, upload['path'], upload['path'], upload['size'], upload['ctime'] )
         rval += FTPFileField.tfoot
-       rval += '<div class="toolParamHelp">This Galaxy server allows you to upload files via FTP.  To upload some files, log in to the FTP server at <strong>%s</strong> using your Galaxy credentials (email address and password).</div>' % self.ftp_site
-       return rval
+        rval += '<div class="toolParamHelp">To upload files, run the command <strong>sftp -oPort=22002 &lt;yourHawkID&gt;@neon-galaxy.hpc.uiowa.edu</strong> and enter your password. Change to the directory named &lt;yourHawkID&gt;, and put your files there.</div>'
+        return rval
 
 class HiddenField(BaseField):
     """
