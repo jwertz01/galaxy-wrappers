@@ -7,6 +7,7 @@
     ln -s -f $stats_output out_stats.html &amp;&amp; /usr/bin/perl /Shared/Clngx/clngx-2-dev/tools/shed_tools/testtoolshed.g2.bx.psu.edu/repos/willmclaren/ensembl_vep/d6778b5d8382/ensembl_vep/variant_effect_predictor/variant_effect_predictor.pl
       -species $species -format vcf -quiet -force -fork 4 -port 3337
       -cache -dir /Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches
+      -offline
       -i $input -o $output -stats_file out_stats.html $output_format $everything
       $check_existing $check_ref $regulatory
       $symbol $hgvs -terms $terms $sift $polyphen $transcript_set
