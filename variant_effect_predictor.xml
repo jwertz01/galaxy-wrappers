@@ -27,7 +27,7 @@
     <param format="vcf" name="input" type="data" label="Input file" help="-i, --input_file"/>
 
     <param name="species" type="select" label="Species" help="--species. Species for your data.">
-      <option value="human" selected="true">Human (GRCh37)</option>
+      <option value="homo_sapiens" selected="true">Human (GRCh37)</option>
     </param>
 
     <param name="output_format" type="select" label="Output format" help="--vcf, --gvf">
