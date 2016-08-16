@@ -11,6 +11,7 @@
       -i $input -o $output -stats_file out_stats.html $output_format $everything
       $check_existing $check_ref $regulatory
       $symbol $hgvs -terms $terms $sift $polyphen $transcript_set
+
       $plugin_lof $pick $flag_pick $flag_pick_allele
       #if str( $cadd_cond.use_cadd ) == "True":
           #if str ( $cadd_cond.plugin_type ) == "full_ref_files":
@@ -102,7 +103,7 @@
     
     <param name="hgvs" type="select" label="Output HGVS identifiers (coding and protein)" help="--hgvs">
       <option value="" selected="true">no</option>
-      <option value="-hgvs">yes</option>
+      <option value="-hgvs -fasta /Shared/Clngx/clngx-2-dev/tools/shed_tool_deps/vep/84/willmclaren/package_vep_84/d6778b5d8382/caches/homo_sapiens/84_GRCh37/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa">yes</option>
     </param>
 
     <param name="pick" type="boolean" checked="False" truevalue="-pick" falsevalue="" label="Pick one consequence" help="--pick. Exclude all but one consequence per variant. Specify criteria for picking consequence (&quot;Pick order&quot;) below." />
