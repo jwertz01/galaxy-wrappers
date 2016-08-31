@@ -11,7 +11,6 @@
       -i $input -o $output -stats_file out_stats.html $output_format $everything
       $check_existing $check_ref $regulatory
       $symbol $hgvs -terms $terms $sift $polyphen $transcript_set
-
       $plugin_lof $pick $flag_pick $flag_pick_allele
       #if str( $cadd_cond.use_cadd ) == "True":
           #if str ( $cadd_cond.plugin_type ) == "full_ref_files":
